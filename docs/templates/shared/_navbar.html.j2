@@ -12,11 +12,24 @@
 
         <div class="navbar-collapse collapse" id="nav-collapse">
           <ul class="nav navbar-nav">
-            {% for item in navigation %}
-              <li {% if item == navitem %} class="active" {% endif %}>
-                <a href="{{root}}/{{item}}/">{{item | capitalize}}</a>
-              </li>
+
+            {% for item, items in navigation.items() %}
+              {% if items | count > 1 %}
+                <li class="nav-item dropdown {% if item == navitem %}active{% endif %}">
+                  <a class="nav-link dropdown-toggle" data-target="#" data-toggle="dropdown" href="#">{{item | capitalize}}<span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    {% for i in items %}
+                    <li><a href="{{root}}/{{i.path}}/">{{i.label}}</a></li>
+                    {% endfor %}
+                  </ul>
+                </li>
+              {% else %}
+                <li {% if item == navitem %} class="active" {% endif %}>
+                  <a href="{{root}}/{{item}}/">{{item | capitalize}}</a>
+                </li>
+              {% endif %}
             {% endfor %}
+
             <li><a href="https://github.com/stedolan/jq/issues">Issues</a></li>
             <li><a href="https://github.com/stedolan/jq">Source</a></li>
             <li><a href="https://jqplay.org">Try online!</a></li>
