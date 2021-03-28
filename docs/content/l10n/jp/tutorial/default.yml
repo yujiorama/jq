@@ -1,9 +1,9 @@
-headline: Tutorial
+headline: チュートリアル
 body:
   - text: |
 
-      GitHub has a JSON API, so let's play with that. This URL gets us the last
-      5 commits from the jq repo.
+      GitHubの提供するJSON APIを利用してみましょう。
+      次のURLにアクセスするとjqのGitHubリポジトリから最新のコミットを5つ取得します。
 
   - command: "curl 'https://api.github.com/repos/stedolan/jq/commits?per_page=5'"
     result: |
@@ -38,10 +38,10 @@ body:
 
   - text: |
 
-      GitHub returns nicely formatted JSON. For servers that don't, it can be
-      helpful to pipe the response through jq to pretty-print it. The simplest
-      jq program is the expression `.`, which takes the input and produces it
-      unchanged as output.
+      GitHubはきれいに整理されたJSONを返します。
+      きれいでない応答を返すサーバーがあるときは整形するためにjqとパイプで連結すると便利です。
+      jqで最も簡潔な式は`.`です。
+      入力を変更せずそのまま出力します。
 
   - command: "curl 'https://api.github.com/repos/stedolan/jq/commits?per_page=5' | jq '.'"
     result: |
@@ -76,7 +76,7 @@ body:
 
   - text: |
 
-      We can use jq to extract just the first commit.
+      次のようにすると最初のコミットを取り出すことができます。
 
   - command: "curl 'https://api.github.com/repos/stedolan/jq/commits?per_page=5' | jq '.[0]'"
     result: |
@@ -158,11 +158,9 @@ body:
 
   - text: |
 
-      For the rest of the examples, I'll leave out the `curl` command - it's not
-      going to change.
+      以降の例でもずっと同じなので`curl`コマンドの記述は省略します。
 
-      There's a lot of info we don't care about there, so we'll restrict it down
-      to the most interesting fields.
+      GitHubの応答には気にしないでいい部分がたくさんあるので、最も重要なフィールドだけを残すことにします。
 
   - command: "jq '.[0] | {message: .commit.message, name: .commit.committer.name}'"
     result: |
@@ -173,12 +171,11 @@ body:
 
   - text: |
 
-      The `|` operator in jq feeds the output of one filter (`.[0]` which gets
-      the first element of the array in the response) into the input of another
-      (`{...}` which builds an object out of those fields). You can access
-      nested attributes, such as `.commit.message`.
+      jqの`|`演算子は前のフィルター`.[0]`（GitHubの応答から配列の最初の要素を取り出します）の出力を
+      次のフィルター`{...}`（指定したフィールドを持つオブジェクトを生成します）へ入力します。
+      `.commit.message`のように記述するとネストしたフィールドにアクセスできます。
 
-      Now let's get the rest of the commits.
+      他のコミットも取得してみましょう。
 
   - command:  "jq '.[] | {message: .commit.message, name: .commit.committer.name}'"
     result: |
@@ -205,21 +202,17 @@ body:
 
   - text: |
 
-      `.[]` returns each element of the array returned in the response, one at a
-      time, which are all fed into
-      `{message: .commit.message, name: .commit.committer.name}`.
+      `.[]`は配列のそれぞれの要素を1つずつ取り出して、フィルター`{message: .commit.message, name: .commit.committer.name}`に入力します。
 
-      Data in jq is represented as streams of JSON values - every jq
-      expression runs for each value in its input stream, and can
-      produce any number of values to its output stream.
+      jqはデータをJSON値のストリームとして扱います。
+      全ての式は入力ストリームのそれぞれの値について実行します。
+      式は任意の数の値を生成し、出力ストリームへ出力します。
 
-      Streams are serialised by just separating JSON values with
-      whitespace. This is a `cat`-friendly format - you can just join
-      two JSON streams together and get a valid JSON stream.
+      ストリームは空白文字（U+0020）で区切られたJSON値としてシリアライズされます。
+      `cat`コマンドで扱いやすい形式です。
+      ですから、ただ2つのJSONストリームを連結しただけでも有効なJSONストリームになります。
 
-      If you want to get the output as a single array, you can tell jq to
-      "collect" all of the answers by wrapping the filter in square
-      brackets:
+      出力を単一の配列にしたければ、指定したフィルターを角括弧で囲めばjqに「集約」させることができます。
 
   - command: "jq '[.[] | {message: .commit.message, name: .commit.committer.name}]'"
     result: |
@@ -250,9 +243,9 @@ body:
 
       - - -
 
-      Next, let's try getting the URLs of the parent commits out of the
-      API results as well. In each commit, the GitHub API includes information
-      about "parent" commits. There can be one or many.
+      次は、GitHub APIの応答から「親コミット」のURLを抽出してみましょう。
+      GitHub APIの応答にはそれぞれのコミットに「親コミット」の情報が含まれています。
+      「親コミット」は1つの場合もあるし、複数の場合もあります。
 
           "parents": [
             {
@@ -267,9 +260,8 @@ body:
             }
           ]
 
-      We want to pull out all of the "html_url" fields inside that array of parent
-      commits and make a simple list of strings to go along with the
-      "message" and "author" fields we already have.
+      やりたいのは、「親コミット」配列の全ての要素についてフィールド"html_url"を取り出して、
+      すでに取得できているフィールド"message"や"author"と一緒に、単純な文字列の配列として出力することです。
 
   - command: "jq '[.[] | {message: .commit.message, name: .commit.committer.name, parents: [.parents[].html_url]}]'"
     result: |
@@ -314,14 +306,13 @@ body:
 
   - text: |
 
-      Here we're making an object as before, but this time the `parents`
-      field is being set to `[.parents[].html_url]`, which collects
-      all of the parent commit URLs defined in the parents object.
+      前の例と同じようにオブジェクトを作成していますが、ここではフィールド`parents`に`.parents[].html_url]`を設定しています。
+      このように記述すると「親コミット」に存在する全てのコミットのURLを集約できます。
 
   - text: |
 
       - - -
 
-      Here endeth the tutorial! There's lots more to play with. Go
-      read [the manual](../manual/) if you're interested, and [download
-      jq](../download/) if you haven't already.
+      チュートリアルはここまでです。
+      他にもいろいろな使い方があるので、興味があれば[マニュアル](../manual)を読んでみましょう。
+      まだダウンロードしていなければ[download jq](../download/)からダウンロードしましょう。
